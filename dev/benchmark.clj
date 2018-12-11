@@ -1,7 +1,7 @@
 (ns benchmark
   (:require [datahike.api :as d]))
 
-(def sample-size 50000)
+(def sample-size 1000)
 
 (defn create-data [conn sample-size]
   (let [cars ["Audi" "Mercedes" "Porsche" "Opel" "VW"]]
