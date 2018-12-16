@@ -1,0 +1,28 @@
+{:aliases
+ {:test
+  {:extra-paths ["test"],
+   :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}},
+  :runner
+  {:extra-deps
+   {com.cognitect/test-runner
+    {:git/url "https://github.com/cognitect-labs/test-runner",
+     :sha "76568540e7f40268ad2b646110f237a60295fa3c"}},
+   :main-opts ["-m" "cognitect.test-runner" "-d" "test"]},
+  :run {:jvm-opts ["-Xmx2g" "-server"]},
+  :1.8
+  {:extra-deps
+   {org.clojure/clojure {:mvn/version "1.8.0"},
+    org.clojure/clojurescript {:mvn/version "1.8.51"}}},
+  :1.9
+  {:extra-deps
+   {org.clojure/clojure {:mvn/version "1.9.0-alpha17"},
+    org.clojure/clojurescript {:mvn/version "1.9.671"}}},
+  :dev
+  {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.12"}}}},
+ :deps
+ {org.clojure/clojure {:mvn/version "1.7.0"},
+  org.clojure/clojurescript {:mvn/version "1.7.228"},
+  io.replikativ/hitchhiker-tree {:git/url "https://github.com/sxb8au/hitchhiker-tree.git"
+                                 :sha "2e757d5898cccfba12f1ecc25c966967fa1454fe"}
+  io.replikativ/superv.async {:mvn/version "0.2.9"},
+  io.replikativ/konserve-leveldb {:mvn/version "0.1.2"}}}
