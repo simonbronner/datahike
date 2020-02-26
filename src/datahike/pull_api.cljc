@@ -1,11 +1,12 @@
-(ns datahike.pull-api
+(ns ^:no-doc datahike.pull-api
   (:require
-    [datahike.db :as db]
-    [datahike.pull-parser :as dpp #?@(:cljs [:refer [PullSpec]])])
-    #?(:clj
-      (:import
-        [datahike.db Datom]
-        [datahike.pull_parser PullSpec])))
+   [datahike.db :as db]
+   #?@(:cljs [datalog.parser.pull :refer [PullSpec]])
+   [datalog.parser.pull :as dpp])
+  #?(:clj
+     (:import
+      [datahike.datom Datom]
+      [datalog.parser.pull PullSpec])))
 
 (defn- into!
   [transient-coll items]
@@ -109,6 +110,7 @@
 (defn- pull-attr-datoms
   [db attr-key attr eid forward? datoms opts [parent & frames]]
   (let [limit (get opts :limit +default-limit+)
+        attr-key (or (:as opts) attr-key)
         found (not-empty
                (cond->> datoms
                  limit (into [] (take limit))))]
@@ -116,7 +118,7 @@
       (let [ref?       (db/ref? db attr)
             component? (and ref? (db/component? db attr))
             multi?     (if forward? (db/multival? db attr) (not component?))
-            datom-val  (if forward? (fn [^Datom d] (.-v d)) (fn [^Datom d] (.-e d)))]
+            datom-val  (if forward? (fn [d] (.-v ^Datom d)) (fn [d] (.-e ^Datom d)))]
         (cond
           (contains? opts :subpattern)
           (->> (subpattern-frame (:subpattern opts)
@@ -134,8 +136,8 @@
                (mapv datom-val)
                (expand-frame parent eid attr-key multi?)
                (conj frames parent))
-          
-          :else 
+
+          :else
           (let [as-value  (cond->> datom-val
                             ref? (comp #(hash-map :db/id %)))
                 single?   (not multi?)]
@@ -209,7 +211,7 @@
 
 (defn- pull-wildcard-expand
   [db frame frames eid pattern]
-  (let [datoms (group-by (fn [^Datom d] (.-a d)) (db/-datoms db :eavt [eid]))
+  (let [datoms (group-by (fn [d] (.-a ^Datom d)) (db/-datoms db :eavt [eid]))
         {:keys [attr recursion]} frame
         rec (cond-> recursion
               (some? attr) (push-recursion attr eid))]

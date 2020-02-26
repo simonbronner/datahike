@@ -3,6 +3,18 @@
             [datahike.migrate :refer :all]
             [datahike.api :refer :all]))
 
+(def tx-data [[:db/add 1 :db/cardinality :db.cardinality/one 536870913 true]
+              [:db/add 1 :db/ident :name 536870913 true]
+              [:db/add 1 :db/index true 536870913 true]
+              [:db/add 1 :db/unique :db.unique/identity 536870913 true]
+              [:db/add 1 :db/valueType :db.type/string 536870913 true]
+              [:db/add 2 :db/cardinality :db.cardinality/one 536870913 true]
+              [:db/add 2 :db/ident :age 536870913 true]
+              [:db/add 2 :db/valueType :db.type/long 536870913 true]
+              [:db/add 3 :age 25 536870913 true]
+              [:db/add 3 :name "Alice" 536870913 true]
+              [:db/add 4 :age 35 536870913 true]
+              [:db/add 4 :name "Bob" 536870913 true]])
 
 (deftest export-import-test
   (testing "Test a roundtrip for exporting and importing."
@@ -10,20 +22,21 @@
           _ (delete-database uri)
           _ (create-database uri)
           conn (connect uri)]
-      @(transact conn [{ :db/id 1, :name  "Ivan", :age   15 }
-                       { :db/id 2, :name  "Petr", :age   37 }
-                       { :db/id 3, :name  "Ivan", :age   37 }
-                       { :db/id 4, :age 15 }])
+      (transact conn tx-data)
+
       (export-db @conn "/tmp/eavt-dump")
+
       (is (= (slurp "/tmp/eavt-dump")
-             "#datahike/Datom [1 :age 15 536870913 true]\n#datahike/Datom [1 :name \"Ivan\" 536870913 true]\n#datahike/Datom [2 :age 37 536870913 true]\n#datahike/Datom [2 :name \"Petr\" 536870913 true]\n#datahike/Datom [3 :age 37 536870913 true]\n#datahike/Datom [3 :name \"Ivan\" 536870913 true]\n#datahike/Datom [4 :age 15 536870913 true]\n"))
+             "#datahike/Datom [1 :db/cardinality :db.cardinality/one 536870913 true]\n#datahike/Datom [1 :db/ident :name 536870913 true]\n#datahike/Datom [1 :db/index true 536870913 true]\n#datahike/Datom [1 :db/unique :db.unique/identity 536870913 true]\n#datahike/Datom [1 :db/valueType :db.type/string 536870913 true]\n#datahike/Datom [2 :db/cardinality :db.cardinality/one 536870913 true]\n#datahike/Datom [2 :db/ident :age 536870913 true]\n#datahike/Datom [2 :db/valueType :db.type/long 536870913 true]\n#datahike/Datom [3 :age 25 536870913 true]\n#datahike/Datom [3 :name \"Alice\" 536870913 true]\n#datahike/Datom [4 :age 35 536870913 true]\n#datahike/Datom [4 :name \"Bob\" 536870913 true]\n"))
+
       (let [import-uri "datahike:mem:///reimport"
             _ (create-database import-uri)
             new-conn (connect import-uri)]
+
         (import-db new-conn "/tmp/eavt-dump")
+
         (is (= (q '[:find ?e
                     :where [?e :name]]
                   @new-conn)
-               #{[3] [2] [1]}))
+               #{[3] [4]}))
         (delete-database uri)))))
-
